@@ -7,28 +7,33 @@
 #define NUM_REGS 4
 unsigned regs[ NUM_REGS ];
 
+//Default Program 
 unsigned program[] = { 0x1064, 0x11C8, 0x4201, 0xF000 };
 
-
+//Program Counter
 int pc = 0;
 
-
+//Gets the next instruction
 int fetch() {
   return program[ pc++ ];
 }
 
+//Stack 
 int stack[200];
+//Stack pointer
 int sp = 0;
 
+//Verbose Debugging
 int debug = 0;
 
+//Opcode Fields (todo: struct this)
 int instrNum = 0;
 int reg1     = 0;
 int reg2     = 0;
 int reg3     = 0;
 int imm      = 0;
 
-
+//Take an int and break it down
 void decode( int instr ) {
   instrNum = (instr & 0xF000) >> 12;
   reg1     = (instr & 0xF00 ) >>  8;
@@ -37,14 +42,16 @@ void decode( int instr ) {
   imm      = (instr & 0xFF  );
 }
 
-
+//VM running flag
 int running = 1;
 
 
+//The meat and bones of the VM
 void eval()
 {
   switch( instrNum )
   {
+    //Halt Instruction
     case INSTR_HALT:
       if(debug) {
         printf( "halt\n" );
@@ -52,6 +59,7 @@ void eval()
       running = 0;
       break;
 
+    //Load Immediate Value
     case INSTR_LOADI:
       if(debug) {
         printf( "loadi r%d #%d\n", reg1, imm );
@@ -59,6 +67,7 @@ void eval()
       regs[ reg1 ] = imm;
       break;
 
+    //Load Value from register into other register
     case INSTR_LOADR:
       if(debug) {
         printf("loadr r%d r%d",reg1, reg2);
@@ -66,13 +75,14 @@ void eval()
       regs[reg1] = regs[reg2];
       break;
 
+    //Add the values of 2 registers and store into another
     case INSTR_ADD:
       if(debug) {
         printf( "add r%d r%d r%d\n", reg1, reg2, reg3 );
       }
       regs[ reg1 ] = regs[ reg2 ] + regs[ reg3 ];
       break;
-
+    //Subtract the values of 2 registers and store into another
     case INSTR_SUB:
       if(debug) {
         printf( "sub r%d r%d r%d\n", reg1, reg2, reg3 );
@@ -80,6 +90,7 @@ void eval()
       regs[ reg1 ] = regs[ reg2 ] - regs[ reg3 ];
       break;
 
+    //Push a Immediate value onto the stack
     case INSTR_PUSHI:
       if(debug) {
         printf("pushi #%d\n",imm);
@@ -88,6 +99,7 @@ void eval()
       sp++;
       break;
 
+    //Push a value of the register onto the stack
     case INSTR_PUSHR:
       if(debug) {
         printf("pushr r%d\n",reg1);
@@ -96,6 +108,7 @@ void eval()
       sp++;
       break;
 
+    //Pop a value off the stack onto the register
     case INSTR_POP:
       if(debug) {
         printf("pop r%d\n",reg1);
@@ -105,7 +118,7 @@ void eval()
       sp--;
       break;
 
-    
+    //Invokes a custom function
     case INSTR_INVOKE:
       //Real meat of the vm...the interupts table :)
       //This will use the stack adn registers
@@ -137,6 +150,7 @@ void eval()
       }
       break;
 
+    //set the program counter to a sepcific spot
     case INSTR_JMP:
       if(debug) {
         printf("jmp r%d",reg1);
@@ -155,6 +169,7 @@ void showRegs() {
   printf("SP: %d\nPC: %d\n",sp,pc);
 }
 
+//Print a preview of the stack
 void showStack(int start, int size) {
   int i;
   for(i=start;i < size;i++) {
@@ -162,6 +177,7 @@ void showStack(int start, int size) {
   }
 }
 
+//autorun 
 void run() {
   while( running )
   {
@@ -180,6 +196,7 @@ void run() {
   }
 }
 
+//Main
 int main( int argc, char * argv[] ) {
   if(argc > 1) {
     //Assume filename
@@ -194,22 +211,12 @@ int main( int argc, char * argv[] ) {
         debug = 1;
       }
     }
-    //printf("Opening %s\n",filename);
     FILE *fp;
     fp = fopen(filename,"rb");
     if(fp) {
-      /*
-      int data;
-      fread(&data, 2, 1, fp);
-      printf("Result %04X\n",data);
-      //Psuedo run
-      decode(data);
-      eval();
-      showRegs();
-      */
+
       int data;
       while (fread(&data,4,1,fp) > 0)  {
-        //printf("%04X\n",data);
         decode(data);
         eval();
       }
