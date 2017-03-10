@@ -229,7 +229,7 @@ int main( int argc, char * argv[] ) {
   } else {
     //No arguments
     printf("VM v0.1\n");
-    printf("vm <prorgam.bin> -d<Verbose Debugging>");
+    printf("Usage: vm <prorgam.bin> -d<Verbose Debugging>\n");
   }
   //run();
   return 0;
