@@ -33,6 +33,9 @@ int reg2     = 0;
 int reg3     = 0;
 int imm      = 0;
 
+
+
+//An int is a WORD 4 0000
 //Take an int and break it down
 void decode( int instr ) {
   instrNum = (instr & 0xF000) >> 12;
@@ -197,7 +200,7 @@ void run() {
 }
 
 //Main
-int main( int argc, char * argv[] ) {
+int _main( int argc, char * argv[] ) {
   if(argc > 1) {
     //Assume filename
     char *filename = argv[1];
@@ -212,7 +215,7 @@ int main( int argc, char * argv[] ) {
       }
     }
     FILE *fp;
-    fp = fopen(filename,"rb");
+    fopen_s(&fp, filename,"rb");
     if(fp) {
 
       int data;
@@ -233,4 +236,146 @@ int main( int argc, char * argv[] ) {
   }
   //run();
   return 0;
+}
+
+/*
+
+New Additions
+8/30/2018
+- Structure some of the data
+- Seperate the code
+- create an opcode struct
+- easy functions for modifying it - 0.3
+- enable breakpoints
+- real debugging	- 0.6
+- more opcodes		- 0.8
+- stdlib builtin	- 0.9
+- JIT core (FUTURE)
+- I/O
+- NET I/O (FUTURE)
+
+
+
+//Program Counter
+int pc = 0;
+
+//Gets the next instruction
+int fetch() {
+return program[ pc++ ];
+}
+
+//Stack
+int stack[200];
+//Stack pointer
+int sp = 0;
+
+//Verbose Debugging
+int debug = 0;
+*/
+
+/*
+	Instruction
+
+*/
+struct instruction *vm_decode_instruction(int inst);
+
+struct instruction {
+	int inst;	//The single byte instruction (1-15)0-F
+	int r1;		//Register operand 1
+	int r2;		//Register operand 2
+	int r3;		//Register operand 3
+	int imm;	//2 byte value
+};
+
+struct vm_cpu {
+	int pc;
+	int sp;
+	int *stack;
+	short r1;
+	short r2;
+	short r3;
+	struct instruction *code;
+	int running;
+};
+
+/*
+	VM Initialize
+	- 0 all data and setup the stack
+*/
+void vm_init(struct vm_cpu *vm, int ramsize) {
+	vm->pc = 0;
+	vm->sp = 0;
+	vm->stack = malloc(ramsize * sizeof(char));
+	vm->r1 = 0;
+	vm->r2 = 0;
+	vm->r3 = 0;
+	vm->running = 0;
+	vm->code = malloc(5 * sizeof(struct instruction));
+	vm->code[0] = *vm_decode_instruction(0x11FF);
+	vm->code[1] = *vm_decode_instruction(0x12FF);
+
+}
+
+/*
+	VM Display Registers
+*/
+void vm_register_display(struct vm_cpu *vm) {
+	printf("VM Registers\n");
+	printf("PC: %04X\n", vm->pc);
+	printf("SP: %04X\n", vm->sp);
+	printf("R1: %04X\n", vm->r1);
+	printf("R2: %04X\n", vm->r2);
+	printf("R3: %04X\n", vm->r3);
+	printf("Running: %d", vm->running);
+}
+
+/*
+	VM Decode Instruction
+	Parse an int as an opcode and return an struct instruction
+*/
+struct instruction *vm_decode_instruction(int inst) {
+	struct instruction *instr = malloc(sizeof(struct instruction));
+	instr->inst = (inst & 0xF000) >> 12;
+	instr->r1 = (inst & 0xF00) >> 8;
+	instr->r2 = (inst & 0xF0) >> 4;
+	instr->r3 = (inst & 0xF);
+	instr->imm = (inst & 0xFF);
+	return instr;
+}
+
+/*
+	VM Display Instruction
+
+*/
+void vm_instruction_display(struct instruction *in) {
+	//Sanity check
+	if(in->inst > 15 || in->inst < 0)
+	printf("Instruction: %01X ", in->inst);
+	switch (in->inst) {
+		case INSTR_LOADI:
+			printf("LOADI R%d -> %04x\n",in->r1,in->imm);
+			break;
+
+		case INSTR_LOADR:
+			printf("LOADR R%d -> R%d\n",in->r1,in->r2);
+			break;
+	}
+}
+
+
+//Re-write-ish
+int main(int argc, char *argv[]) {
+	printf("VM v0.3\n");
+	struct vm_cpu machine;
+	vm_init(&machine, 200);
+	int code_size = sizeof(&machine.code);
+	printf("Size: %d\n", code_size);
+	for (int i = 0; i < code_size; i++) {
+		struct instruction *op = &machine.code[i];
+		vm_instruction_display(op);
+	}
+	//vm_register_display(&machine);
+
+	return 0;
+
 }

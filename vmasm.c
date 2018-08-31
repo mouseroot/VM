@@ -35,14 +35,14 @@ int parseLine(char *line) {
   }
   printf("PARSING %s",line);
   char *p;
-  p = strtok (line," ");
+  char *next;
   int counter = 0;
   int inst = 0;
   int r1 = 0;
   int r2 = 0;
   int r3 = 0;
   int imm = 0;
-  while (p != NULL)
+  while ((p = strtok_s(next, " ", &next)) != NULL)
   {
     if(counter == 0) {
 
@@ -147,7 +147,7 @@ int parseLine(char *line) {
             r3 = 3;
         }
     }
-    p = strtok (NULL, " ");
+    //p = strtok (NULL, " ");
     counter++;
   }
   //Gernate Opcode
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
         //Assume outputname
         char *outputname = argv[2];
         printf("Opening %s...\n", filename);
-        fp = fopen(filename,"r");
+        fopen_s(&fp, filename,"r");
 
         if(fp) {
             const size_t line_size = 300;
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
             printf("\n");
             //Now to write to an output file XD
             FILE *outFile = NULL;
-            outFile = fopen(outputname,"wb+");
+            fopen_s(&outFile, outputname,"wb+");
             if(outFile) {
                 printf("Writing to %s\n",outputname);
                 for(write_counter=0;write_counter < ic;write_counter++) {
