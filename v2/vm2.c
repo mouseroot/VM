@@ -22,175 +22,11 @@ void machine_fill_instruction(machine *m, int inst) {
 	}
 }
 
-void vm_cmp(machine *m, int r_source, int val) {
-	int ival = 0;
-	switch (r_source) {
-	case 0:
-		ival = (val - m->r0);
-		break;
-	case 1:
-		ival = (val - m->r1);
-		break;
-	case 2:
-		ival = (val - m->r2);
-		break;
-	case 3:
-		ival = (val - m->r3);
-		break;
-	}
-	printf("CMP %d\n", ival);
-}
-
-void vm_nop(machine *m) {
-	m->pc++;
-}
-
-void vm_jmp(machine *m, int jmpto) {
-	int imm = (jmpto & 0xFF);
-	m->pc = imm;
-}
-
-void vm_inc(machine *m, int r_index) {
-	switch (r_index) {
-		case 0:
-			m->r0++;
-			break;
-		case 1:
-			m->r1++;
-			break;
-		case 2:
-			m->r2++;
-			break;
-		case 3:
-			m->r3++;
-			break;
-	}
-}
-
-void vm_dec(machine *m, int r_index) {
-	switch (r_index) {
-		case 0:
-			m->r0--;
-			break;
-		case 1:
-			m->r1--;
-			break;
-		case 2:
-			m->r2--;
-			break;
-		case 3:
-			m->r3--;
-			break;
-	}
-}
-
-void vm_add(machine *m, int r_dest, int value) {
-	int imm = (value & 0xFF);
-	switch (r_dest) {
-	case 0:
-		m->r0 = (m->r0 + imm);
-		break;
-	case 1:
-		m->r1 = (m->r1 + imm);
-		break;
-	case 2:
-		m->r2 = (m->r2 + imm);
-		break;
-	case 3:
-		m->r3 = (m->r3 + imm);
-		break;
-	}
-}
-
-void vm_sub(machine *m, int r_dest, int value) {
-	int imm = (value & 0xFF);
-	switch (r_dest) {
-	case 0:
-		m->r0 = (m->r0 - imm);
-		break;
-	case 1:
-		m->r1 = (m->r1 - imm);
-		break;
-	case 2:
-		m->r2 = (m->r2 - imm);
-		break;
-	case 3:
-		m->r3 = (m->r3 - imm);
-		break;
-	}
-}
-
-void vm_loadr(machine *m, int r_source, int r_dest) {
-
-	int rval = 0;
-	switch (r_source) {
-
-		case 0:
-			rval = m->r0;
-		break;
-
-		case 1:
-			rval = m->r1;
-		break;
-
-		case 2:
-			rval = m->r2;
-		break;
-
-		case 3:
-			rval = m->r3;
-		break;
-
-		default:
-			return;
-		break;
-	}
-	switch (r_dest) {
-		case 0:
-			m->r0 = rval;
-			break;
-		case 1:
-			m->r1 = rval;
-			break;
-		case 2:
-			m->r2 = rval;
-			break;
-		case 3:
-			m->r3 = rval;
-			break;
-	}
-}
-
-void vm_loadi(machine *m, int r_index, int value) {
-	int imm = (value & 0xFF);
-	switch (r_index) {
-		case 0:
-			m->r0 = imm;
-		break;
-
-		case 1:
-			m->r1 = imm;
-		break;
-
-		case 2:
-			m->r2 = imm;
-		break;
-
-		case 3:
-			m->r3 = imm;
-		break;
-
-		default:
-			printf("Invalid Register r%d", r_index);
-		break;
-	}
-}
-
 void machine_init(machine *m, int codesize) {
 	m->r0 = 0;
-	m->r1 = 1;
-	m->r2 = 2;
-	m->r3 = 3;
+	m->r1 = 0;
+	m->r2 = 0;
+	m->r3 = 0;
 	m->pc = 0;
 	m->sp = 0;
 	m->code_size = codesize;
@@ -201,55 +37,62 @@ void machine_init(machine *m, int codesize) {
 }
 
 void machine_display_registers(machine *m) {
-	printf("R0: %04X\t",m->r0);
-	printf("R1: %04X\t", m->r1);
-	printf("R2: %04X\t", m->r2);
-	printf("R3: %04X\n", m->r3);
+	printf("R0: %04X(%d)\t",m->r0, m->r0);
+	printf("R1: %04X(%d)\t", m->r1, m->r1);
+	printf("R2: %04X(%d)\t", m->r2, m->r2);
+	printf("R3: %04X(%d)\n", m->r3, m->r3);
 
 	printf("PC: %04X\t", m->pc);
 	printf("SP: %04X\t\n", m->sp);
 }
 
+//Converts char to int
 int get_int(char *input) {
 	int i = 0;
 	sscanf(input, "%4d", &i);
 	return i;
 }
 
-void input_test(machine *m, int argc, char *argv) {
-	if (argc > 1) {
-		int count = (argc - 1);
-		if (count == 1) {
-			printf("R1 -> %04X - R2\n", get_int(&argv[1]));
-			int r1 = get_int(&argv[1]);
-			printf("DBG: %04X\n", r1);
-			vm_loadi(m, R1, r1);
-			vm_cmp(m, R1, R2);
-		}
-	}
+//filters invalid registers
+int filter_register(int reg) {
+	return reg <= 3 ? reg : R0;
+}
+
+
+void print_banner() {
+	printf("VM2 <Register: 0-3> <value: 0-65535>\n");
+	printf("VM2 -test <instruction> <operand> <operand>\n");
+
 }
 
 
 int main(int argc, char *argv[]) {
-	machine my_vm;
+	if (argc == 1) {
+		print_banner();
+		return 1;
+	}
+	else {
+		machine my_vm;
 
-	//Setup the VM
-	machine_init(&my_vm, 15); //15 instructions
+		//Setup the VM
+		machine_init(&my_vm, 15); //15 instructions
 
-	//Small inputs test
-	input_test(&my_vm, argc, *argv);
+		//Small inputs test
+		//test_loadi(&my_vm, argc, argv);
+		test_instruction(&my_vm, argc, argv);
 
-	//vm_loadi(&my_vm, R1, 0x01);
-	//vm_loadi(&my_vm, R2, 0x02);
-	//vm_add(&my_vm, R0, 0x1);
-	//vm_cmp(&my_vm, R1, R2);
+		//vm_loadi(&my_vm, R1, 0x01);
+		//vm_loadi(&my_vm, R2, 0x02);
+		//vm_add(&my_vm, R0, 0x1);
+		//vm_cmp(&my_vm, R1, R2);
 
-	//Stdout the registers
-	machine_display_registers(&my_vm);
+		//Stdout the registers
+		machine_display_registers(&my_vm);
 
-	//for (int i = 0; i < my_vm.code_size; i++) {
-	//	printf("Instruction #%d: %1X ->",i, my_vm.code[i].inst);
-	//	printf("%2X %2X %2X %04X\n", my_vm.code[i].op1, my_vm.code[i].op2, my_vm.code[i].op3, my_vm.code[i].imm);
-	//}
+		//for (int i = 0; i < my_vm.code_size; i++) {
+		//	printf("Instruction #%d: %1X ->",i, my_vm.code[i].inst);
+		//	printf("%2X %2X %2X %04X\n", my_vm.code[i].op1, my_vm.code[i].op2, my_vm.code[i].op3, my_vm.code[i].imm);
+		//}
+	}
 
 }

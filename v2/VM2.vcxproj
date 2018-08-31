@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="machine.c" />
+    <ClCompile Include="test.c" />
     <ClCompile Include="vm2.c" />
   </ItemGroup>
   <ItemGroup>

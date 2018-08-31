@@ -69,3 +69,16 @@ void vm_cmp(machine *m, int r_source, int r_dest);
 void vm_nop(machine *m);
 void vm_jmp(machine *m, int jmpto);
 void vm_hlt(machine *m);
+
+/*
+	VM Tests
+	------------
+
+
+*/
+void test_loadi(machine *m, int argc, char *argv[]);
+void test_instruction(machine *m, int argc, char *argv[]);
+
+//Misc Helpers
+int get_int(char *input);
+int filter_register(int reg);
