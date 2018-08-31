@@ -216,10 +216,23 @@ int main(int argc, char *argv[]) {
 	//Setup the VM
 	machine_init(&my_vm, 15); //15 instructions
 
-	vm_loadi(&my_vm, R1, 0x01);
-	vm_loadi(&my_vm, R2, 0x02);
-	vm_add(&my_vm, R0, 0x1);
-	vm_cmp(&my_vm, R2, R1);
+	//Small inputs test
+	if(argc > 1) {
+		int count = (argc - 1);
+		if(count == 1) {
+			printf("R1 -> %04X - R2", argv[1]);
+			int i = 0;
+			sscanf(argv[1], "%2X", &i);
+			printf("DBG: %04X\n",i);
+			vm_loadi(&my_vm,R1, i);
+			vm_cmp(&my_vm,R1,R2);
+		}
+	}
+
+	//vm_loadi(&my_vm, R1, 0x01);
+	//vm_loadi(&my_vm, R2, 0x02);
+	//vm_add(&my_vm, R0, 0x1);
+	vm_cmp(&my_vm, R1, R2);
 
 	//Stdout the registers
 	machine_display_registers(&my_vm);
