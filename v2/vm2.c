@@ -23,10 +23,10 @@ void machine_fill_instruction(machine *m, int inst) {
 }
 
 void machine_init(machine *m, int codesize) {
-	m->r0 = 0;
-	m->r1 = 0;
-	m->r2 = 0;
-	m->r3 = 0;
+	m->r0 = 255;
+	m->r1 = 1;
+	m->r2 = 2;
+	m->r3 = 3;
 	m->pc = 0;
 	m->sp = 0;
 	m->code_size = codesize;
@@ -65,34 +65,54 @@ void print_banner() {
 
 }
 
+void handle_cmdline(char *argv[]) {
+	
+}
+
+int get_register(char *rname) {
+	if (strstr(rname, "R0") || strstr(rname, "r0")) {
+		return R0;
+	}
+	else if (strstr(rname, "R1") || strstr(rname, "r1")) {
+		return R1;
+	}
+	else if (strstr(rname, "R2") || strstr(rname, "r2")) {
+		return R2;
+	}
+	else if (strstr(rname, "R3") || strstr(rname, "r3")) {
+		return R3;
+	}
+	else {
+		return 0;
+	}
+}
+
 
 int main(int argc, char *argv[]) {
-	if (argc == 1) {
+	int count = (argc - 1);
+
+	//No parameters
+	if (count == 0) {
 		print_banner();
 		return 1;
 	}
-	else {
-		machine my_vm;
 
-		//Setup the VM
-		machine_init(&my_vm, 15); //15 instructions
+	//More then one parameter
+	else if (count >= 1) {
+		char *option = argv[1];
 
-		//Small inputs test
-		//test_loadi(&my_vm, argc, argv);
-		test_instruction(&my_vm, argc, argv);
-
-		//vm_loadi(&my_vm, R1, 0x01);
-		//vm_loadi(&my_vm, R2, 0x02);
-		//vm_add(&my_vm, R0, 0x1);
-		//vm_cmp(&my_vm, R1, R2);
-
-		//Stdout the registers
-		machine_display_registers(&my_vm);
-
-		//for (int i = 0; i < my_vm.code_size; i++) {
-		//	printf("Instruction #%d: %1X ->",i, my_vm.code[i].inst);
-		//	printf("%2X %2X %2X %04X\n", my_vm.code[i].op1, my_vm.code[i].op2, my_vm.code[i].op3, my_vm.code[i].imm);
-		//}
+		if (strstr(option, "-a") || strstr(option, "--assemble")) {
+			printf("Live Assembler Mode\n");
+		}
+		else if (strstr(option, "-t") || strstr(option, "--test")) {
+			machine my_vm;
+			machine_init(&my_vm, 15);
+			if (count >= 3) {
+				test_instruction(&my_vm, argc, argv);
+				machine_display_registers(&my_vm);
+			}
+		}
 	}
+
 
 }

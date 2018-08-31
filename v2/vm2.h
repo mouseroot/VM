@@ -82,3 +82,4 @@ void test_instruction(machine *m, int argc, char *argv[]);
 //Misc Helpers
 int get_int(char *input);
 int filter_register(int reg);
+int get_register(char *rname);
