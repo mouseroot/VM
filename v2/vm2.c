@@ -21,7 +21,68 @@ void machine_fill_instruction(machine *m, int inst) {
 	}
 }
 
-void machine_vm_add(machine *m, int r_dest, int value) {
+void vm_cmp(machine *m, int r_source, int val) {
+	int ival = 0;
+	switch (r_source) {
+	case 0:
+		ival = (val - m->r0);
+		break;
+	case 1:
+		ival = (val - m->r1);
+		break;
+	case 2:
+		ival = (val - m->r2);
+		break;
+	case 3:
+		ival = (val - m->r3);
+		break;
+	}
+	printf("CMP %d\n", ival);
+}
+
+void vm_nop(machine *m) {
+	m->pc++;
+}
+
+void vm_jmp(machine *m, int jmpto) {
+
+}
+
+void vm_inc(machine *m, int r_index) {
+	switch (r_index) {
+		case 0:
+			m->r0++;
+			break;
+		case 1:
+			m->r1++;
+			break;
+		case 2:
+			m->r2++;
+			break;
+		case 3:
+			m->r3++;
+			break;
+	}
+}
+
+void vm_dec(machine *m, int r_index) {
+	switch (r_index) {
+		case 0:
+			m->r0--;
+			break;
+		case 1:
+			m->r1--;
+			break;
+		case 2:
+			m->r2--;
+			break;
+		case 3:
+			m->r3--;
+			break;
+	}
+}
+
+void vm_add(machine *m, int r_dest, int value) {
 	int imm = (value & 0xFF);
 	switch (r_dest) {
 	case 0:
@@ -39,7 +100,25 @@ void machine_vm_add(machine *m, int r_dest, int value) {
 	}
 }
 
-void machine_vm_loadr(machine *m, int r_source, int r_dest) {
+void vm_sub(machine *m, int r_dest, int value) {
+	int imm = (value & 0xFF);
+	switch (r_dest) {
+	case 0:
+		m->r0 = (m->r0 - imm);
+		break;
+	case 1:
+		m->r1 = (m->r1 - imm);
+		break;
+	case 2:
+		m->r2 = (m->r2 - imm);
+		break;
+	case 3:
+		m->r3 = (m->r3 - imm);
+		break;
+	}
+}
+
+void vm_loadr(machine *m, int r_source, int r_dest) {
 
 	int rval = 0;
 	switch (r_source) {
@@ -80,7 +159,7 @@ void machine_vm_loadr(machine *m, int r_source, int r_dest) {
 	}
 }
 
-void machine_vm_loadi(machine *m, int r_index, int value) {
+void vm_loadi(machine *m, int r_index, int value) {
 	int imm = (value & 0xFF);
 	switch (r_index) {
 		case 0:
@@ -136,10 +215,11 @@ int main(int argc, char *argv[]) {
 	//Setup the VM
 	machine_init(&my_vm, 15); //15 instructions
 
-	machine_vm_loadi(&my_vm, R1, 0xFF);
-	machine_vm_loadi(&my_vm, R0, 0xF);
-	machine_vm_loadr(&my_vm, R0, R2);
-	machine_vm_add(&my_vm, R0, 0x1);
+	vm_loadi(&my_vm, R1, 0x01);
+	vm_loadi(&my_vm, R2, 0x02);
+	vm_add(&my_vm, R0, 0x1);
+	vm_cmp(&my_vm, R2, R1);
+
 	//Stdout the registers
 	machine_display_registers(&my_vm);
 

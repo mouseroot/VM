@@ -5,9 +5,18 @@
 #define R2 2
 #define R3 3
 
-#define INSTR_LOADI 1
-#define INSTR_LOADR 2
-#define INSTR_ADD 3
+#define INSTR_LOADI 0x1
+#define INSTR_LOADR 0x2
+#define INSTR_ADD	0x3
+#define INSTR_SUB	0x4
+#define INSTR_INC	0x5
+#define INSTR_DEC	0x6
+#define INSTR_CMP	0x7
+#define INSTR_NOP	0x8
+#define INSTR_JMP	0x9
+//More
+#define INSTR_HALT	0xF
+
 
 
 typedef struct {
@@ -48,6 +57,15 @@ void machine_fill_instruction(machine *m, int inst);
 
 */
 
-void machine_vm_loadi(machine *m, int r_index, int value);
-void machine_vm_loadr(machine *m, int r_source, int r_dest);
-void machine_vm_add(machine *m, int r_index, int value);
+void vm_loadi(machine *m, int r_index, int value);
+void vm_loadr(machine *m, int r_source, int r_dest);
+void vm_add(machine *m, int r_index, int value);
+void vm_sub(machine *m, int r_index, int value);
+
+void vm_inc(machine *m, int value);
+void vm_dec(machine *m, int value);
+
+void vm_cmp(machine *m, int r_source, int r_dest);
+void vm_nop(machine *m);
+void vm_jmp(machine *m, int jmpto);
+void vm_hlt(machine *m);
