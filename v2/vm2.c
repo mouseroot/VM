@@ -45,7 +45,7 @@ void vm_nop(machine *m) {
 }
 
 void vm_jmp(machine *m, int jmpto) {
-	int imm = (jumpto & 0xFF);
+	int imm = (jmpto & 0xFF);
 	m->pc = imm;
 }
 
