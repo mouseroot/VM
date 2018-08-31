@@ -124,7 +124,7 @@ void eval()
     //Invokes a custom function
     case INSTR_INVOKE:
       //Real meat of the vm...the interupts table :)
-      //This will use the stack adn registers
+      //This will use the stack and registers
       if(debug) {
         printf("invoke #%d\n",imm);
       }
@@ -215,7 +215,7 @@ int _main( int argc, char * argv[] ) {
       }
     }
     FILE *fp;
-    fopen_s(&fp, filename,"rb");
+    //fopen_s(&fp, filename,"rb");
     if(fp) {
 
       int data;
