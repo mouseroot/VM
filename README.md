@@ -15,7 +15,7 @@ make vmasm
 
 100 byte stack
 
-3 Registers r0 r1 r2 r3
+4 Registers r0 r1 r2 r3
 
 Use # for immediate values eg: Real numbers
 
@@ -29,13 +29,13 @@ Example: loadi r0 #100
 Loadr - Load value of register into another register
 Example: loadr r0 r1
 
-add - add the values of 2 registers and returns it
-Example: add r0 r1 r2
+add - add the values of 2 registers
+Example: add r0 r1
 
 sub - subract the values of 2 registers and return it
-Example: sub r0 r1 r2
+Example: sub r0 r1
 
-jmp - jmp to the value in a register
+jmp - jmp to an immediate value
 Example: jmp #5
 
 pushi - push immediate value onto stack
