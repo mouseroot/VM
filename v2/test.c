@@ -36,6 +36,10 @@ void test_instruction(machine *m, int argc, char *argv[]) {
 		int r2 = get_register(argv[4]);
 		vm_cmp(m, r1, r2);
 	}
+	else if (strstr("cmpr", name)) {
+		int r2 = get_register(argv[4]);
+		vm_cmpr(m, r1, r2);
+	}
 	else if (strstr("nop", name)) {
 
 	}

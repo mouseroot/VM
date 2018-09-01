@@ -23,12 +23,19 @@ void machine_fill_instruction(machine *m, int inst) {
 }
 
 void machine_init(machine *m, int codesize) {
+	//General Purpose
 	m->r0 = 255;
 	m->r1 = 1;
 	m->r2 = 2;
 	m->r3 = 3;
+	//Reserved
 	m->pc = 0;
 	m->sp = 0;
+	//Flags
+	m->cflag = 0;
+	m->zflag = 0;
+	m->oflag = 0;
+
 	m->code_size = codesize;
 	m->stack_size = 255;
 	m->code = malloc(sizeof(instruction) * m->code_size);
@@ -43,7 +50,8 @@ void machine_display_registers(machine *m) {
 	printf("R3: %04X(%d)\n", m->r3, m->r3);
 
 	printf("PC: %04X\t", m->pc);
-	printf("SP: %04X\t\n", m->sp);
+	printf("SP: %04X\t", m->sp);
+	printf("FLAGS: \nCarry: %d\nZero: %d\nOverflow: %d\n", m->cflag, m->zflag, m->oflag);
 }
 
 //Converts char to int

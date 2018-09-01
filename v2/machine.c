@@ -6,21 +6,70 @@
 void vm_cmp(machine *m, int r_source, int val) {
 	int ival = 0;
 	switch (r_source) {
-	case 0:
-		ival = (val - m->r0);
-		break;
-	case 1:
-		ival = (val - m->r1);
-		break;
-	case 2:
-		ival = (val - m->r2);
-		break;
-	case 3:
-		ival = (val - m->r3);
-		break;
+		case 0:
+			ival = (val - m->r0);
+			break;
+		case 1:
+			ival = (val - m->r1);
+			break;
+		case 2:
+			ival = (val - m->r2);
+			break;
+		case 3:
+			ival = (val - m->r3);
+			break;
 	}
 	printf("CMP %d\n", ival);
 }
+
+void vm_cmpr(machine *m, int r_source, int r_dest) {
+	int isrc = 0;
+	int idst = 0;
+
+	switch (r_dest) {
+		case 0:
+			idst = m->r0;
+			break;
+		case 1:
+			idst = m->r1;
+			break;
+		case 2:
+			idst = m->r2;
+			break;
+		case 3:
+			idst = m->r3;
+			break;
+		}
+
+
+	switch (r_source) {
+		case 0:
+			isrc = m->r0;
+			break;
+		case 1:
+			isrc = m->r1;
+			break;
+		case 2:
+			isrc =  m->r2;
+			break;
+		case 3:
+			isrc =  m->r3;
+			break;
+	}
+	if ((isrc - idst) == 0) {
+		m->zflag = 1;
+	}
+	if ((isrc - idst) <= -1) {
+		m->cflag = 1;
+		m->oflag = 1;
+	}
+	if ((isrc - idst) > 255) {
+		m->oflag = 1;
+	}
+	
+
+}
+
 
 void vm_nop(machine *m) {
 	m->pc++;
@@ -126,6 +175,7 @@ void vm_loadr(machine *m, int r_source, int r_dest) {
 		return;
 		break;
 	}
+
 	switch (r_dest) {
 	case 0:
 		m->r0 = rval;

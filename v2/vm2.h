@@ -38,6 +38,9 @@ typedef struct {
 	instruction *code;
 	int code_size;
 	int stack_size;
+	int cflag;
+	int zflag;
+	int oflag;
 } machine;
 
 /*
@@ -56,17 +59,28 @@ void machine_fill_instruction(machine *m, int inst);
 	------------
 
 */
-
+//Load
 void vm_loadi(machine *m, int r_index, int value);
 void vm_loadr(machine *m, int r_source, int r_dest);
+
+//Add
 void vm_add(machine *m, int r_index, int value);
+void vm_addr(machine *m, int r_source, int r_dest);
+
+//Sub
 void vm_sub(machine *m, int r_index, int value);
+void vm_subr(machine *m, int r_source, int r_dest);
+
 
 void vm_inc(machine *m, int value);
 void vm_dec(machine *m, int value);
 
+//Cmp
 void vm_cmp(machine *m, int r_source, int r_dest);
+void vm_cmpr(machine *m, int r_source, int r_dest);
+
 void vm_nop(machine *m);
+
 void vm_jmp(machine *m, int jmpto);
 void vm_hlt(machine *m);
 
