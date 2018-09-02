@@ -74,6 +74,13 @@ int get_int(char *input) {
 	return i;
 }
 
+int get_immediate(char *str) {
+	if (strchr(str, "#") == 0 || strchr(str, "@") == 0) {
+		*str++;
+		int result = atoi(str);
+		return result;
+}
+
 //filters invalid registers
 int filter_register(int reg) {
 	return reg <= 3 ? reg : R0;
