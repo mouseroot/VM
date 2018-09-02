@@ -14,10 +14,11 @@
 #define INSTR_CMP	0x7
 #define INSTR_NOP	0x8
 #define INSTR_JMP	0x9
+#define INSTR_CMPR  0xA
 //More
 #define INSTR_HALT	0xF
 
-
+int buildOp(int instr, int reg1, int reg2, int imm);
 
 typedef struct {
 	int inst;
@@ -49,7 +50,7 @@ typedef struct {
 
 */
 
-void machine_init(machine* m, int codesize);
+void machine_init(machine* m);
 void machine_display_registers(machine *m);
 instruction *machine_decode(int inst);
 void machine_fill_instruction(machine *m, int inst);

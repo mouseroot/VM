@@ -15,6 +15,20 @@ instruction *machine_decode(int inst) {
 	return i;
 }
 
+int buildOp(int instr, int reg1, int reg2, int imm) {
+	int op = instr << 12;
+	if (imm != 0) {
+		op = op | (imm & 0xFF);
+		op = op | reg1 << 8;
+	}
+	else {
+		op = op | reg1 << 8;
+		op = op | reg2 << 4;
+	}
+	printf("Opcode: %04X(%d)\n",op,op);
+	return op;
+}
+
 void machine_fill_instruction(machine *m, int inst) {
 	instruction in = *machine_decode(inst);
 	for (int i = 0; i < m->code_size; i++) {
@@ -22,12 +36,12 @@ void machine_fill_instruction(machine *m, int inst) {
 	}
 }
 
-void machine_init(machine *m, int codesize) {
+void machine_init(machine *m) {
 	//General Purpose
-	m->r0 = 255;
-	m->r1 = 1;
-	m->r2 = 2;
-	m->r3 = 3;
+	m->r0 = 0;
+	m->r1 = 0;
+	m->r2 = 0;
+	m->r3 = 0;
 	//Reserved
 	m->pc = 0;
 	m->sp = 0;
@@ -36,11 +50,10 @@ void machine_init(machine *m, int codesize) {
 	m->zflag = 0;
 	m->oflag = 0;
 
-	m->code_size = codesize;
+	m->code_size = 0;
 	m->stack_size = 255;
-	m->code = malloc(sizeof(instruction) * m->code_size);
-	m->stack = malloc(sizeof(short) * m->stack_size);
-	
+	m->code = malloc(sizeof(instruction) * 5); //Hardcode 5
+	m->stack = malloc(sizeof(char) * m->stack_size);
 }
 
 void machine_display_registers(machine *m) {
@@ -69,13 +82,89 @@ int filter_register(int reg) {
 
 void print_banner() {
 	printf("VM2 <Register: 0-3> <value: 0-65535>\n");
-	printf("VM2 -t -test <instruction> <operand> <operand> - Executes a single instruction\n");
-	printf("VM2 -a -assemble - drops into assemble mode <repl assembler>\n");
+	printf("VM2 -t --test <instruction> <operand> <operand> - Executes a single instruction\n");
+	printf("VM2 -a --assemble - drops into assemble mode <repl assembler>\n");
 
 }
 
-void handle_cmdline(char *argv[]) {
-	
+void input(char *prompt, char *buffer)
+{
+	printf(prompt);
+	fgets(buffer, 1024, stdin);
+}
+
+void parse_command(machine *m, char *command)
+{
+	//If we get more then a blank string
+	if (strlen(command) > 1) {
+		char *arr[20];
+		int i = 0;
+		arr[i] = strtok(command, " ");
+		while (arr[i] != NULL) {
+			arr[++i] = strtok(NULL, " ");
+		}
+		int size = i;
+
+
+		//a command
+		if (strcmp(arr[0], "a") == 0) {
+			char *name = arr[1];
+			int r = get_register(arr[2]);
+			int r2 = get_register(arr[3]);
+			int imm = get_int(arr[3]);
+			//LOADI
+			if (strcmp(name, "loadi") == 0) {
+				vm_loadi(m, r, imm);
+				int op = buildOp(INSTR_LOADI, r, 0, imm);
+				instruction *loadi = machine_decode(op); //1012 - loadi r0 0xB
+			}
+			//LOADR
+			if (strcmp(name, "loadr") == 0) {
+				vm_loadr(m, r, r2);
+				int op = buildOp(INSTR_LOADR, r, r2, 0);
+				instruction *loadr = machine_decode(op);
+			}
+			//ADD
+			if (strcmp(name, "add") == 0) {
+				vm_add(m, r, imm);
+				int op = buildOp(INSTR_ADD, r, 0, imm);
+				instruction *add = machine_decode(op);
+			}
+			//SUB
+			if (strcmp(name, "sub") == 0) {
+				vm_sub(m, r, imm);
+				int op = buildOp(INSTR_SUB, r, 0, imm);
+				instruction *sub = machine_decode(op);
+			}
+			//CMP
+			if (strcmp(name, "cmp") == 0) {
+				vm_cmp(m, r, imm);
+				int op = buildOp(INSTR_CMP, r, 0, imm);
+				instruction *cmp = machine_decode(op);
+			}
+			//CMPR
+			if (strcmp(name, "cmpr") == 0) {
+				vm_cmpr(m, r, r2);
+				int op = buildOp(INSTR_CMPR, r, r2, 0);
+				instruction *cmpr = machine_decode(op);
+			}
+		}
+
+
+		//r command
+		if (strcmp(arr[0], "r\n") == 0) {
+			machine_display_registers(m);
+		}
+
+		if (strcmp(arr[0], "w\n") == 0) {
+			return;
+		}
+
+		
+		
+	}
+
+
 }
 
 int get_register(char *rname) {
@@ -96,6 +185,29 @@ int get_register(char *rname) {
 	}
 }
 
+int get_register_value(machine *m, int reg) {
+	switch (reg)
+	{
+	case 0:
+		return m->r0;
+		break;
+	case 1:
+		return m->r1;
+		break;
+	case 2:
+		return m->r2;
+		break;
+	case 3:
+		return m->r3;
+		break;
+	default:
+		return -1;
+		break;
+	}
+}
+
+
+
 
 int main(int argc, char *argv[]) {
 	int count = (argc - 1);
@@ -109,13 +221,19 @@ int main(int argc, char *argv[]) {
 	//More then one parameter
 	else if (count >= 1) {
 		char *option = argv[1];
+		machine my_vm;
+		machine_init(&my_vm);
 
 		if (strstr(option, "-a") || strstr(option, "--assemble")) {
-			printf("Live Assembler Mode\n");
+			char command[1024];
+			do {
+				input(">", command);
+				parse_command(&my_vm, command);
+			} while (strcmp(command, "quit\n") != 0);
 		}
 		else if (strstr(option, "-t") || strstr(option, "--test")) {
-			machine my_vm;
-			machine_init(&my_vm, 15);
+			
+			
 			if (count >= 3) {
 				test_instruction(&my_vm, argc, argv);
 				machine_display_registers(&my_vm);
