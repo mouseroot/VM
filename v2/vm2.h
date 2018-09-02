@@ -8,11 +8,15 @@
 #define INSTR_LOADI 0x1
 #define INSTR_LOADR 0x2
 #define INSTR_ADD	0x3
+#define INSTR_ADDR	0xB
 #define INSTR_SUB	0x4
-#define INSTR_INC	0x5
-#define INSTR_DEC	0x6
+#define INSTR_SUBR	0xC
+#define INSTR_PUSHI	0xD
+#define INSTR_PUSHR	0xE
+#define INSTR_INC	0x5 //
+#define INSTR_DEC	0x6 //remove these for ret/call
 #define INSTR_CMP	0x7
-#define INSTR_NOP	0x8
+#define INSTR_JNZ	0x8
 #define INSTR_JMP	0x9
 #define INSTR_CMPR  0xA
 //More

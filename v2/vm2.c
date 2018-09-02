@@ -79,6 +79,10 @@ int get_immediate(char *str) {
 		*str++;
 		int result = atoi(str);
 		return result;
+	}
+	else {
+		return -1;
+	}
 }
 
 //filters invalid registers
