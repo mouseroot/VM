@@ -5,6 +5,10 @@
 #include "vm2.h"
 
 
+/*
+	Encoder / Decoder
+*/
+
 instruction *machine_decode(int inst) {
 	instruction *i = malloc(sizeof(instruction));
 	i->inst = (inst & 0xF000) >> 12;
@@ -15,7 +19,7 @@ instruction *machine_decode(int inst) {
 	return i;
 }
 
-int buildOp(int instr, int reg1, int reg2, int imm) {
+int machine_encode(int instr, int reg1, int reg2, int imm) {
 	int op = instr << 12;
 	if (imm != 0) {
 		op = op | (imm & 0xFF);
@@ -29,12 +33,22 @@ int buildOp(int instr, int reg1, int reg2, int imm) {
 	return op;
 }
 
+/*
+	Machine methods
+*/
+
 void machine_fill_instruction(machine *m, int inst) {
 	instruction in = *machine_decode(inst);
 	for (int i = 0; i < m->code_size; i++) {
 		m->code[i] = in;
 	}
 }
+
+void machine_add_instruction(machine *m, instruction in) {
+	m->code[m->code_size] = in;
+	m->code_size++;
+}
+
 
 void machine_init(machine *m) {
 	//General Purpose
@@ -52,9 +66,10 @@ void machine_init(machine *m) {
 
 	m->code_size = 0;
 	m->stack_size = 255;
-	m->code = instruction[100];
 	m->stack = malloc(sizeof(char) * m->stack_size);
 }
+
+
 
 void machine_display_registers(machine *m) {
 	printf("R0: %04X(%d)\t",m->r0, m->r0);
@@ -66,6 +81,10 @@ void machine_display_registers(machine *m) {
 	printf("SP: %04X\t", m->sp);
 	printf("FLAGS: \nCarry: %d\nZero: %d\nOverflow: %d\n", m->cflag, m->zflag, m->oflag);
 }
+
+/*
+	Helpers
+*/
 
 //Converts char to int
 int get_int(char *input) {
@@ -95,87 +114,12 @@ void print_banner() {
 	printf("VM2 <Register: 0-3> <value: 0-65535>\n");
 	printf("VM2 -t --test <instruction> <operand> <operand> - Executes a single instruction\n");
 	printf("VM2 -a --assemble - drops into assemble mode <repl assembler>\n");
-
 }
 
 void input(char *prompt, char *buffer)
 {
 	printf(prompt);
 	fgets(buffer, 1024, stdin);
-}
-
-void parse_command(machine *m, char *command)
-{
-	//If we get more then a blank string
-	if (strlen(command) > 1) {
-		char *arr[20];
-		int i = 0;
-		arr[i] = strtok(command, " ");
-		while (arr[i] != NULL) {
-			arr[++i] = strtok(NULL, " ");
-		}
-		int size = i;
-
-
-		//a command
-		if (strcmp(arr[0], "a") == 0) {
-			char *name = arr[1];
-			int r = get_register(arr[2]);
-			int r2 = get_register(arr[3]);
-			int imm = get_int(arr[3]);
-			//LOADI
-			if (strcmp(name, "loadi") == 0) {
-				vm_loadi(m, r, imm);
-				int op = buildOp(INSTR_LOADI, r, 0, imm);
-				instruction *loadi = machine_decode(op); //1012 - loadi r0 0xB
-			}
-			//LOADR
-			if (strcmp(name, "loadr") == 0) {
-				vm_loadr(m, r, r2);
-				int op = buildOp(INSTR_LOADR, r, r2, 0);
-				instruction *loadr = machine_decode(op);
-			}
-			//ADD
-			if (strcmp(name, "add") == 0) {
-				vm_add(m, r, imm);
-				int op = buildOp(INSTR_ADD, r, 0, imm);
-				instruction *add = machine_decode(op);
-			}
-			//SUB
-			if (strcmp(name, "sub") == 0) {
-				vm_sub(m, r, imm);
-				int op = buildOp(INSTR_SUB, r, 0, imm);
-				instruction *sub = machine_decode(op);
-			}
-			//CMP
-			if (strcmp(name, "cmp") == 0) {
-				vm_cmp(m, r, imm);
-				int op = buildOp(INSTR_CMP, r, 0, imm);
-				instruction *cmp = machine_decode(op);
-			}
-			//CMPR
-			if (strcmp(name, "cmpr") == 0) {
-				vm_cmpr(m, r, r2);
-				int op = buildOp(INSTR_CMPR, r, r2, 0);
-				instruction *cmpr = machine_decode(op);
-			}
-		}
-
-
-		//r command
-		if (strcmp(arr[0], "r\n") == 0) {
-			machine_display_registers(m);
-		}
-
-		if (strcmp(arr[0], "w\n") == 0) {
-			return;
-		}
-
-		
-		
-	}
-
-
 }
 
 int get_register(char *rname) {
@@ -218,6 +162,94 @@ int get_register_value(machine *m, int reg) {
 }
 
 
+/*
+	Core IO Logic
+*/
+
+void parse_command(machine *m, char *command)
+{
+	//If we get more then a blank string
+	if (strlen(command) > 1) {
+		char *arr[20];
+		int i = 0;
+		arr[i] = strtok(command, " ");
+		while (arr[i] != NULL) {
+			arr[++i] = strtok(NULL, " ");
+		}
+		int size = i;
+
+
+		//a command
+		if (strcmp(arr[0], "a") == 0) {
+			char *name = arr[1];
+			int r = get_register(arr[2]);
+			int r2 = get_register(arr[3]);
+			int imm = get_int(arr[3]);
+			//LOADI
+			if (strcmp(name, "loadi") == 0) {
+				vm_loadi(m, r, imm);
+				int op = machine_encode(INSTR_LOADI, r, 0, imm);
+				instruction *loadi = machine_decode(op); //1012 - loadi r0 0xB
+				machine_add_instruction(m, *loadi);
+			}
+			//LOADR
+			if (strcmp(name, "loadr") == 0) {
+				vm_loadr(m, r, r2);
+				int op = machine_encode(INSTR_LOADR, r, r2, 0);
+				instruction *loadr = machine_decode(op);
+			}
+			//ADD
+			if (strcmp(name, "add") == 0) {
+				vm_add(m, r, imm);
+				int op = machine_encode(INSTR_ADD, r, 0, imm);
+				instruction *add = machine_decode(op);
+			}
+			//SUB
+			if (strcmp(name, "sub") == 0) {
+				vm_sub(m, r, imm);
+				int op = machine_encode(INSTR_SUB, r, 0, imm);
+				instruction *sub = machine_decode(op);
+			}
+			//CMP
+			if (strcmp(name, "cmp") == 0) {
+				vm_cmp(m, r, imm);
+				int op = machine_encode(INSTR_CMP, r, 0, imm);
+				instruction *cmp = machine_decode(op);
+			}
+			//CMPR
+			if (strcmp(name, "cmpr") == 0) {
+				vm_cmpr(m, r, r2);
+				int op = machine_encode(INSTR_CMPR, r, r2, 0);
+				instruction *cmpr = machine_decode(op);
+			}
+		}
+		if (strcmp(arr[0], "l\n") == 0) {
+			printf("listing %d instructions\n",m->code_size);
+			for (int i = 0; i > m->code_size; i++) {
+				printf("Instruction #%d\t%04X", i, m->code[i]);
+			}
+		}
+
+
+		//r command
+		if (strcmp(arr[0], "r\n") == 0) {
+			machine_display_registers(m);
+		}
+
+		if (strcmp(arr[0], "w\n") == 0) {
+			return;
+		}
+
+		
+		
+	}
+
+
+}
+
+
+
+
 
 
 int main(int argc, char *argv[]) {
@@ -238,13 +270,11 @@ int main(int argc, char *argv[]) {
 		if (strstr(option, "-a") || strstr(option, "--assemble")) {
 			char command[1024];
 			do {
-				input(">", command);
+				input("Assembler> ", command);
 				parse_command(&my_vm, command);
 			} while (strcmp(command, "quit\n") != 0);
 		}
 		else if (strstr(option, "-t") || strstr(option, "--test")) {
-			
-			
 			if (count >= 3) {
 				test_instruction(&my_vm, argc, argv);
 				machine_display_registers(&my_vm);
