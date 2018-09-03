@@ -22,13 +22,13 @@
 //More
 #define INSTR_HALT	0xF
 
-int buildOp(int instr, int reg1, int reg2, int imm);
+int machine_encode(int instr, int reg1, int reg2, int imm);
 
 typedef struct {
 	int inst;
 	int op1;
 	int op2;
-	int op3;
+	//int op3;
 	int imm;
 } instruction;
 
