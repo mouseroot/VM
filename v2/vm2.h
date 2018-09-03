@@ -40,7 +40,7 @@ typedef struct {
 	int pc;
 	int sp;
 	int *stack;
-	instruction *code;
+	instruction code[100];
 	int code_size;
 	int stack_size;
 	int cflag;

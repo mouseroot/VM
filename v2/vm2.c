@@ -52,7 +52,7 @@ void machine_init(machine *m) {
 
 	m->code_size = 0;
 	m->stack_size = 255;
-	m->code = malloc(sizeof(instruction) * 5); //Hardcode 5
+	m->code = instruction[100];
 	m->stack = malloc(sizeof(char) * m->stack_size);
 }
 
