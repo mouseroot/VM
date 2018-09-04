@@ -9,7 +9,8 @@
 int fsize(char *filename) {
 	FILE *fp;
 	int fsize = 0;
-	fopen_s(&fp, filename, "r");
+	//fopen_s(&fp, filename, "r");
+	fp = fopen(filename,"r");
 	if (fp != NULL) {
 		fseek(fp, 0, 2);
 		fsize = ftell(fp);
