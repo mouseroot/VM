@@ -5,6 +5,19 @@
 #include "vm2.h"
 
 
+int fsize(char *filename) {
+	FILE *fp;
+	int fsize = 0;
+	fopen_s(&fp, filename, "r");
+	if (fp != NULL) {
+		fseek(fp, 0, 2);
+		fsize = ftell(fp);
+		fclose(fp);
+		return fsize;
+	}
+	return -1;
+}
+
 /*
 	Encoder / Decoder
 */
@@ -17,7 +30,6 @@ instruction *machine_decode(int inst) {
 	i->inst = (inst & 0xF000) >> 12;
 	i->op1 = (inst & 0xF00) >> 8;
 	i->op2 = (inst & 0xF0) >> 4;
-	//i->op3 = (inst & 0xF);
 	i->imm = (inst & 0xFF);
 	return i;
 }
@@ -33,7 +45,12 @@ int machine_encode(int instr, int reg1, int reg2, int imm) {
 		op = op | reg1 << 8;
 		op = op | reg2 << 4;
 	}
-	printf("Opcode: %04X(%d)\n",op,op);
+	//printf("Opcode: %04X(%d)\n",op,op);
+	return op;
+}
+
+int machine_to_opcode(instruction *inp) {
+	int op = machine_encode(inp->inst, inp->op1, inp->op2, inp->imm);
 	return op;
 }
 
@@ -55,6 +72,73 @@ void machine_add_instruction(machine *m, instruction in) {
 	m->code_size++;
 }
 
+void machine_execute_instruction(machine *m, instruction *inst) {
+	//instruction *inst = &m->code[m->pc];
+	printf("Execute ");
+	switch (inst->inst)
+	{
+	case INSTR_LOADI:
+		printf("loadi %s %d (%04X)\n", get_register_name(inst->op1), inst->imm, machine_to_opcode(inst));
+		vm_loadi(m, inst->op1, inst->imm);
+		break;
+	case INSTR_LOADR:
+		printf("loadr %s %s (%04X)\n", get_register_name(inst->op1), get_register_name(inst->op2), machine_to_opcode(inst));
+		vm_loadr(m, inst->op1, inst->op2);
+		break;
+	case INSTR_ADD:
+		printf("add %s %d (%04X)\n", get_register_name(inst->op1), inst->imm, machine_to_opcode(inst));
+		vm_add(m, inst->op1, inst->imm);
+		break;
+	case INSTR_ADDR:
+		printf("addr %s %s (%04X)\n", get_register_name(inst->op1), get_register_name(inst->op2), machine_to_opcode(inst));
+		vm_addr(m, inst->op1, inst->op2);
+		break;
+	case INSTR_SUB:
+		printf("sub %s %d (%04X)\n", get_register_name(inst->op1), inst->imm, machine_to_opcode(inst));
+		vm_sub(m, inst->op1, inst->imm);
+		break;
+	case INSTR_SUBR:
+		printf("subr %s %s (%04X)\n", get_register_name(inst->op1), get_register_name(inst->op2), machine_to_opcode(inst));
+		vm_subr(m, inst->op1, inst->op2);
+		break;
+	case INSTR_PUSHI:
+		printf("pushi %d (%04X)\n", inst->imm, machine_to_opcode(inst));
+		vm_pushi(m, inst->imm);
+		break;
+	case INSTR_PUSHR:
+		printf("pushr %s (%04X)\n", inst->imm, get_register_name(inst->op1));
+		vm_pushr(m, inst->op1);
+		break;
+	case INSTR_INC:
+		printf("inc\n");
+		break;
+	case INSTR_DEC:
+		printf("dec\n");
+		break;
+	case INSTR_CMP:
+		printf("cmp %s %d (%04X)\n", get_register_name(inst->op1), inst->imm, machine_to_opcode(inst));
+		vm_cmp(m, inst->op1, inst->imm);
+		break;
+	case INSTR_JNZ:
+		printf("jnz -Not Yet Implimented\n");
+		break;
+	case INSTR_JMP:
+		printf("jmp -Not Yet Implimented\n");
+		break;
+	case INSTR_CMPR:
+		printf("cmpr %s %s (%04X)\n", get_register_name(inst->op1), get_register_name(inst->op2), machine_to_opcode(inst));
+		vm_cmpr(m, inst->op1, inst->op2);
+		break;
+	case INSTR_HALT:
+		printf("halt\n");
+		break;
+
+	default:
+		printf("UNKNOWN\n");
+		break;
+	}
+}
+
 //Used to setup the machine
 //Zeros everything out and allocates memory
 
@@ -74,7 +158,9 @@ void machine_init(machine *m) {
 
 	m->code_size = 0;
 	m->stack_size = 255;
-	m->stack = malloc(sizeof(char) * m->stack_size);
+	for (int i = 0; i < m->stack_size; i++) {
+		m->stack[i] = 0;
+	}
 }
 
 
@@ -106,7 +192,7 @@ int get_int(char *input) {
 }
 
 int get_immediate(char *str) {
-	if (strchr(str, "#") == 0 || strchr(str, "@") == 0) {
+	if (strchr(str, '#') == 0 || strchr(str, '@') == 0) {
 		*str++;
 		int result = atoi(str);
 		return result;
@@ -223,6 +309,9 @@ int get_register(char *rname) {
 	else if (strstr(rname, "R3") || strstr(rname, "r3")) {
 		return R3;
 	}
+	else if (strstr(rname, "sp") || strstr(rname, "SP")) {
+		return SP;
+	}
 	else {
 		return 0;
 	}
@@ -232,23 +321,36 @@ int get_register(char *rname) {
 int get_register_value(machine *m, int reg) {
 	switch (reg)
 	{
-	case 0:
+	case R0:
 		return m->r0;
 		break;
-	case 1:
+	case R1:
 		return m->r1;
 		break;
-	case 2:
+	case R2:
 		return m->r2;
 		break;
-	case 3:
+	case R3:
 		return m->r3;
+		break;
+	case SP:
+		return m->sp;
+		break;
+	case PC:
+		return m->pc;
 		break;
 	default:
 		return -1;
 		break;
 	}
 }
+
+//char *remove_newline(char *str) {
+//	for (char *p; *p != NULL; *p++) {
+//		char c = *p;
+//
+//	}
+//}
 
 
 /*
@@ -261,6 +363,7 @@ void parse_command(machine *m, char *command)
 	if (strlen(command) > 1) {
 		char *command_array[20];
 		int i = 0;
+		//Get input string, split by " "
 		command_array[i] = strtok(command, " ");
 		while (command_array[i] != NULL) {
 			command_array[++i] = strtok(NULL, " ");
@@ -268,8 +371,8 @@ void parse_command(machine *m, char *command)
 		int size = i;
 
 
-		//a command
-		if (strcmp(command_array[0], "a") == 0) {
+		//asm command
+		if (strcmp(command_array[0], "asm") == 0) {
 			char *name = command_array[1];
 			int r = get_register(command_array[2]);
 			int r2 = get_register(command_array[3]);
@@ -277,7 +380,7 @@ void parse_command(machine *m, char *command)
 
 			//LOADI
 			if (strcmp(name, "loadi") == 0) {
-				vm_loadi(m, r, imm);
+				//vm_loadi(m, r, imm);
 				int op = machine_encode(INSTR_LOADI, r, 0, imm);
 				instruction *loadi = machine_decode(op); //1012 - loadi r0 0xB
 				machine_add_instruction(m, *loadi);
@@ -285,56 +388,140 @@ void parse_command(machine *m, char *command)
 
 			//LOADR
 			if (strcmp(name, "loadr") == 0) {
-				vm_loadr(m, r, r2);
+				//vm_loadr(m, r, r2);
 				int op = machine_encode(INSTR_LOADR, r, r2, 0);
 				instruction *loadr = machine_decode(op);
+				machine_add_instruction(m, *loadr);
 			}
 
 			//ADD
 			if (strcmp(name, "add") == 0) {
-				vm_add(m, r, imm);
+				//vm_add(m, r, imm);
 				int op = machine_encode(INSTR_ADD, r, 0, imm);
 				instruction *add = machine_decode(op);
+				machine_add_instruction(m, *add);
 			}
 
 			//SUB
 			if (strcmp(name, "sub") == 0) {
-				vm_sub(m, r, imm);
+				//vm_sub(m, r, imm);
 				int op = machine_encode(INSTR_SUB, r, 0, imm);
 				instruction *sub = machine_decode(op);
+				machine_add_instruction(m, *sub);
 			}
 
 			//CMP
 			if (strcmp(name, "cmp") == 0) {
-				vm_cmp(m, r, imm);
+				//vm_cmp(m, r, imm);
 				int op = machine_encode(INSTR_CMP, r, 0, imm);
 				instruction *cmp = machine_decode(op);
+				machine_add_instruction(m, *cmp);
 			}
 
 			//CMPR
 			if (strcmp(name, "cmpr") == 0) {
-				vm_cmpr(m, r, r2);
+				//vm_cmpr(m, r, r2);
 				int op = machine_encode(INSTR_CMPR, r, r2, 0);
 				instruction *cmpr = machine_decode(op);
+				machine_add_instruction(m, *cmpr);
 			}
 		}
-		if (strcmp(command_array[0], "l\n") == 0) {
+
+		//list command
+		if (strcmp(command_array[0], "list\n") == 0) {
 			printf("listing %d instructions\n",m->code_size);
 			for (int i = 0; i < m->code_size; i++) {
 				instruction *in = &m->code[i];
-				if(in->op2)
-				printf("#%d\t%s %s %d\n", i, get_instruction_name(in->inst), get_register_name(in->op1), in->imm);
+				if(in->imm) {
+					printf("#%d\t%s %s %d\n", i, get_instruction_name(in->inst), get_register_name(in->op1), in->imm);
+				}
+				else {
+					printf("#%d\t%s %s %s\n", i, get_instruction_name(in->inst), get_register_name(in->op1), get_register_name(in->op2));
+				}
+				
 			}
 		}
 
 
-		//r command
-		if (strcmp(command_array[0], "r\n") == 0) {
+		//run command
+		if (strcmp(command_array[0], "run\n") == 0) {
+			/*
+			for (int i = 0; i < m->code_size; i++) {
+				instruction *in = &m->code[i];
+				machine_execute_instruction(m,in);
+				//printf("#%d\t%s %s %d\n", i, get_instruction_name(in->inst), get_register_name(in->op1), in->imm);
+			}
+			*/
+			do {
+				instruction *current = &m->stack[m->pc];
+				machine_execute_instruction(m, current);
+			} while (m->pc != m->stack_size);
+
 			machine_display_registers(m);
 		}
 
-		if (strcmp(command_array[0], "w\n") == 0) {
-			return;
+		//write command
+		if (strcmp(command_array[0], "write\n") == 0) {
+			printf("Writeing %d instructions (%zu Bytes)\n", m->code_size, (m->code_size * sizeof(int)));
+			FILE *writeFile;
+			char filename[255];
+			input("File to write to: ", filename);
+			writeFile = fopen("test.bin", "wb");
+			if (writeFile) {
+				printf("Opening %s for writing\n", "test.bin");
+				for (int i = 0; i < m->code_size; ++i) {
+					instruction *in = &m->code[i];
+					int op = machine_to_opcode(in);
+					fwrite(&op, sizeof(int), 1, writeFile);
+				}
+				fclose(writeFile);
+			}
+			else {
+				printf("Error opening %s for writeing!!!\nAborting\n", filename);
+			}
+
+		}
+		//load command
+		if (strcmp(command_array[0], "load\n") == 0) {
+			FILE *loadFile;
+			loadFile = fopen("test.bin", "rb");
+			if (loadFile) {
+				printf("Opening test.bin for reading\n");
+				int size = fsize("test.bin") / sizeof(int);
+				if (size > 0) {
+					for (int i = 0; i < size; i++) {
+						int read = 0;
+						fread(&read, sizeof(int), 1, loadFile);
+						instruction *ins = machine_decode(read);
+						printf("Reading %04X (%d) -> %s\n", read,read,get_instruction_name(ins->inst));
+						machine_add_instruction(m, *ins);
+						m->stack[i] = read;
+
+					}
+				}
+
+			}
+			else {
+				printf("Could not open test.bin for reading\n");
+			}
+		}
+		//purge command
+		if (strcmp(command_array[0], "purge\n") == 0) {
+			printf("Resetting code in buffer\n");
+			machine_fill_instruction(m, machine_decode(0));
+			for (int i = 0; i < m->code_size; i++) {
+				
+			}
+		}
+		//mem command
+		if (strcmp(command_array[0], "mem\n") == 0) {
+			printf("Dumping memory\n");
+			int half = m->stack_size / 2;
+			int full = m->stack_size;
+			int part = m->stack_size / 4;
+			for (int i = 0; i < full; i++) {
+				printf("%04X\n", m->stack[i]);
+			}
 		}
 
 		

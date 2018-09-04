@@ -4,6 +4,9 @@
 #define R1 1
 #define R2 2
 #define R3 3
+#define SP 4
+#define PC 5
+
 
 #define INSTR_LOADI 0x1
 #define INSTR_LOADR 0x2
@@ -28,7 +31,6 @@ typedef struct {
 	int inst;
 	int op1;
 	int op2;
-	//int op3;
 	int imm;
 } instruction;
 
@@ -39,7 +41,7 @@ typedef struct {
 	int r3;
 	int pc;
 	int sp;
-	int *stack;
+	int stack[255];
 	instruction code[100];
 	int code_size;
 	int stack_size;
@@ -58,6 +60,8 @@ void machine_init(machine* m);
 void machine_display_registers(machine *m);
 instruction *machine_decode(int inst);
 void machine_fill_instruction(machine *m, int inst);
+void machine_add_instruction(machine *m, instruction in);
+void machine_execute_instruction(machine *m, instruction *inst);
 
 /*
 	VM Functions
@@ -86,6 +90,9 @@ void vm_cmpr(machine *m, int r_source, int r_dest);
 
 void vm_nop(machine *m);
 
+void vm_pushi(machine *m, int value);
+void vm_pushr(machine *m, int r_index);
+
 void vm_jmp(machine *m, int jmpto);
 void vm_hlt(machine *m);
 
@@ -102,3 +109,6 @@ void test_instruction(machine *m, int argc, char *argv[]);
 int get_int(char *input);
 int filter_register(int reg);
 int get_register(char *rname);
+char *get_register_name(int reg);
+char *get_instruction_name(int inst);
+int get_register_value(machine *m, int reg);

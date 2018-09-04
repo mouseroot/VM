@@ -1,3 +1,8 @@
 .vs
 *.exe
 \x64\Debug\*
+*.pdb
+*.ilk
+*.obj
+*.idb
+*.tlog

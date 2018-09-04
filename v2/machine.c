@@ -6,17 +6,20 @@
 void vm_cmp(machine *m, int r_source, int val) {
 	int ival = 0;
 	switch (r_source) {
-		case 0:
+		case R0:
 			ival = (val - m->r0);
 			break;
-		case 1:
+		case R1:
 			ival = (val - m->r1);
 			break;
-		case 2:
+		case R2:
 			ival = (val - m->r2);
 			break;
-		case 3:
+		case R3:
 			ival = (val - m->r3);
+			break;
+		case SP:
+			ival = (val - m->sp);
 			break;
 	}
 	printf("CMP %d\n", ival);
@@ -27,32 +30,32 @@ void vm_cmpr(machine *m, int r_source, int r_dest) {
 	int idst = 0;
 
 	switch (r_dest) {
-		case 0:
+		case R0:
 			idst = m->r0;
 			break;
-		case 1:
+		case R1:
 			idst = m->r1;
 			break;
-		case 2:
+		case R2:
 			idst = m->r2;
 			break;
-		case 3:
+		case R3:
 			idst = m->r3;
 			break;
 		}
 
 
 	switch (r_source) {
-		case 0:
+		case R0:
 			isrc = m->r0;
 			break;
-		case 1:
+		case R1:
 			isrc = m->r1;
 			break;
-		case 2:
+		case R2:
 			isrc =  m->r2;
 			break;
-		case 3:
+		case R3:
 			isrc =  m->r3;
 			break;
 	}
@@ -82,16 +85,16 @@ void vm_jmp(machine *m, int jmpto) {
 
 void vm_inc(machine *m, int r_index) {
 	switch (r_index) {
-	case 0:
+	case R0:
 		m->r0++;
 		break;
-	case 1:
+	case R1:
 		m->r1++;
 		break;
-	case 2:
+	case R2:
 		m->r2++;
 		break;
-	case 3:
+	case R3:
 		m->r3++;
 		break;
 	}
@@ -99,34 +102,42 @@ void vm_inc(machine *m, int r_index) {
 
 void vm_dec(machine *m, int r_index) {
 	switch (r_index) {
-	case 0:
+	case R0:
 		m->r0--;
 		break;
-	case 1:
+	case R1:
 		m->r1--;
 		break;
-	case 2:
+	case R2:
 		m->r2--;
 		break;
-	case 3:
+	case R3:
 		m->r3--;
 		break;
 	}
 }
 
+void vm_addr(machine *m, int r_dest, int r_src) {
+
+}
+
+void vm_subr(machine *m, int r_dest, int r_src) {
+
+}
+
 void vm_add(machine *m, int r_dest, int value) {
 	int imm = (value & 0xFF);
 	switch (r_dest) {
-	case 0:
+	case R0:
 		m->r0 = (m->r0 + imm);
 		break;
-	case 1:
+	case R1:
 		m->r1 = (m->r1 + imm);
 		break;
-	case 2:
+	case R2:
 		m->r2 = (m->r2 + imm);
 		break;
-	case 3:
+	case R3:
 		m->r3 = (m->r3 + imm);
 		break;
 	}
@@ -135,16 +146,16 @@ void vm_add(machine *m, int r_dest, int value) {
 void vm_sub(machine *m, int r_dest, int value) {
 	int imm = (value & 0xFF);
 	switch (r_dest) {
-	case 0:
+	case R0:
 		m->r0 = (m->r0 - imm);
 		break;
-	case 1:
+	case R1:
 		m->r1 = (m->r1 - imm);
 		break;
-	case 2:
+	case R2:
 		m->r2 = (m->r2 - imm);
 		break;
-	case 3:
+	case R3:
 		m->r3 = (m->r3 - imm);
 		break;
 	}
@@ -155,19 +166,19 @@ void vm_loadr(machine *m, int r_source, int r_dest) {
 	int rval = 0;
 	switch (r_source) {
 
-	case 0:
+	case R0:
 		rval = m->r0;
 		break;
 
-	case 1:
+	case R1:
 		rval = m->r1;
 		break;
 
-	case 2:
+	case R2:
 		rval = m->r2;
 		break;
 
-	case 3:
+	case R3:
 		rval = m->r3;
 		break;
 
@@ -177,38 +188,54 @@ void vm_loadr(machine *m, int r_source, int r_dest) {
 	}
 
 	switch (r_dest) {
-	case 0:
+	case R0:
 		m->r0 = rval;
 		break;
-	case 1:
+	case R1:
 		m->r1 = rval;
 		break;
-	case 2:
+	case R2:
 		m->r2 = rval;
 		break;
-	case 3:
+	case R3:
 		m->r3 = rval;
 		break;
 	}
 }
 
+void vm_pushi(machine *m, int value) {
+
+}
+
+void vm_pushr(machine *m, int r_index) {
+
+}
+
 void vm_loadi(machine *m, int r_index, int value) {
 	int imm = (value & 0xFF);
 	switch (r_index) {
-	case 0:
+	case R0:
 		m->r0 = imm;
 		break;
 
-	case 1:
+	case R1:
 		m->r1 = imm;
 		break;
 
-	case 2:
+	case R2:
 		m->r2 = imm;
 		break;
 
-	case 3:
+	case R3:
 		m->r3 = imm;
+		break;
+
+	case SP:
+		m->sp = imm;
+		break;
+
+	case PC:
+		m->pc = imm;
 		break;
 
 	default:
