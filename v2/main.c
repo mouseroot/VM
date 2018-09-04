@@ -5,16 +5,11 @@
 #include "vm.h"
 
 
-
-
-
 void print_banner() {
 	printf("VM2 <Register: 0-3> <value: 0-65535>\n");
 	printf("VM2 -t --test <instruction> <operand> <operand> - Executes a single instruction\n");
 	printf("VM2 -a --assemble - drops into assemble mode <repl assembler>\n");
 }
-
-
 
 
 /*
