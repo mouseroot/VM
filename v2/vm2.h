@@ -48,6 +48,7 @@ typedef struct {
 	int cflag;
 	int zflag;
 	int oflag;
+	int wc;
 } machine;
 
 /*

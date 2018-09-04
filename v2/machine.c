@@ -118,11 +118,49 @@ void vm_dec(machine *m, int r_index) {
 }
 
 void vm_addr(machine *m, int r_dest, int r_src) {
-
+	int rval = get_register_value(m,r_dest);
+	int sval = get_register_value(m,r_src);
+	int result = rval + sval;
+	switch (r_dest) {
+	case R0:
+		m->r0 = result;
+		break;
+	case R1:
+		m->r1 = result;
+		break;
+	case R2:
+		m->r2 = result;
+		break;
+	case R3:
+		m->r3 = result;
+		break;
+	case SP:
+		m->sp = result;
+		break;
+	}
 }
 
 void vm_subr(machine *m, int r_dest, int r_src) {
-
+	int rval = get_register_value(m, r_dest);
+	int sval = get_register_value(m, r_src);
+	int result = rval - sval;
+	switch (r_dest) {
+	case R0:
+		m->r0 = result;
+		break;
+	case R1:
+		m->r1 = result;
+		break;
+	case R2:
+		m->r2 = result;
+		break;
+	case R3:
+		m->r3 = result;
+		break;
+	case SP:
+		m->sp = result;
+		break;
+	}
 }
 
 void vm_add(machine *m, int r_dest, int value) {
@@ -162,48 +200,34 @@ void vm_sub(machine *m, int r_dest, int value) {
 }
 
 void vm_loadr(machine *m, int r_source, int r_dest) {
+	int isrc = get_register_value(m,r_source);
 
-	int rval = 0;
-	switch (r_source) {
+	switch (r_dest) {
 
 	case R0:
-		rval = m->r0;
+		m->r0 = isrc;
 		break;
 
 	case R1:
-		rval = m->r1;
+		m->r1 = isrc;
 		break;
 
 	case R2:
-		rval = m->r2;
+		m->r2 = isrc;
 		break;
 
 	case R3:
-		rval = m->r3;
+		m->r3 = isrc;
 		break;
 
 	default:
 		return;
 		break;
 	}
-
-	switch (r_dest) {
-	case R0:
-		m->r0 = rval;
-		break;
-	case R1:
-		m->r1 = rval;
-		break;
-	case R2:
-		m->r2 = rval;
-		break;
-	case R3:
-		m->r3 = rval;
-		break;
-	}
 }
 
 void vm_pushi(machine *m, int value) {
+
 
 }
 
