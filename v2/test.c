@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "vm2.h"
+#include "vm.h"
 
 
 void test_instruction(machine *m, int argc, char *argv[]) {
