@@ -63,6 +63,7 @@ instruction *machine_decode(int inst);
 void machine_fill_instruction(machine *m, int inst);
 void machine_add_instruction(machine *m, instruction in);
 void machine_execute_instruction(machine *m, instruction *inst);
+int machine_to_opcode(instruction *inp);
 
 /*
 	VM Functions
@@ -107,9 +108,12 @@ void test_loadi(machine *m, int argc, char *argv[]);
 void test_instruction(machine *m, int argc, char *argv[]);
 
 //Misc Helpers
+void input(char *str, char *buffer);
 int get_int(char *input);
 int filter_register(int reg);
 int get_register(char *rname);
 char *get_register_name(int reg);
 char *get_instruction_name(int inst);
 int get_register_value(machine *m, int reg);
+int fsize(char *filename);
+
